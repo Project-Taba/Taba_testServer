@@ -3,9 +3,13 @@ from django.urls import path
 from .views import (
     AccelPressureData,
     BreakPressureData,
-    CalibrationData, SensorCalibrationData,
+    CalibrationData,
+    get_csv_in_local,
+    SensorCalibrationData,
     SpeedData,
-    PressureData, TestsetData,
+    PressureData,
+    TestsetData,
+    get_csv,
 )
 
 urlpatterns = [
@@ -20,4 +24,6 @@ urlpatterns = [
     ),
     path("calibration/", CalibrationData.as_view()),
     path("testdata/", TestsetData.as_view()),
+    path("testdata/getcsv/", get_csv, name="get-csv"),
+    path("testdata/getcsvinlocal/", get_csv_in_local, name="get-csv-in-local"),
 ]
