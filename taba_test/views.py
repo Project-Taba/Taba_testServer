@@ -1,4 +1,5 @@
 from django.db.models import Max, Min
+from rest_framework.decorators import api_view
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -13,7 +14,7 @@ def append_to_csv(filename, data):
     file_path = Path(settings.BASE_DIR) / "data" / filename
     file_exists = file_path.is_file()
 
-    with open(file_path, mode="a", newline="") as csvfile:
+    with open(file_path, mode="a", newline="", encoding="utf-8") as csvfile:
         fieldnames = data.keys()
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
 
@@ -98,16 +99,32 @@ class CalibrationData(APIView):
 class SensorCalibrationData(APIView):
     def get(self, request, sensor_id):
         aggregates = Calibration.objects.filter(sensor_id=sensor_id).aggregate(
-            Max('break_value'), Min('break_value'),
-            Max('accel_value'), Min('accel_value')
+            Max("break_value"),
+            Min("break_value"),
+            Max("accel_value"),
+            Min("accel_value"),
         )
 
         result = {
             "sensor_id": sensor_id,
-            "break_max": aggregates['break_value__max'],
-            "break_min": aggregates['break_value__min'],
-            "accel_max": aggregates['accel_value__max'],
-            "accel_min": aggregates['accel_value__min'],
+            "break_max": aggregates["break_value__max"],
+            "break_min": aggregates["break_value__min"],
+            "accel_max": aggregates["accel_value__max"],
+            "accel_min": aggregates["accel_value__min"],
         }
 
         return Response(result)
+
+class TestsetData(APIView):
+    def post(self, request, *args, **kwargs):
+        serializer = TestsetSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def get(self, request):
+        data = Testset.objects.all()
+        serializer = TestsetSerializer(data, many=True)
+        return Response(serializer.data)
+
